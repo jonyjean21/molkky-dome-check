@@ -75,18 +75,27 @@ function App() {
   };
 
   const loadLogs = async () => {
-    await cleanOldLogs();
-    const logsRef = query(ref(db, 'logs'), orderByChild('timestamp'));
-    const snapshot = await get(logsRef);
-    if (!snapshot.exists()) {
-      setLogs([]);
-      return;
+    try {
+      await cleanOldLogs();
+    } catch (e) {
+      // ignore cleanup errors
     }
-    const data = snapshot.val();
-    const list = Object.entries(data)
-      .map(([id, value]) => ({ id, ...value }))
-      .sort((a, b) => b.timestamp - a.timestamp);
-    setLogs(list);
+    try {
+      const logsRef = query(ref(db, 'logs'), orderByChild('timestamp'));
+      const snapshot = await get(logsRef);
+      if (!snapshot.exists()) {
+        setLogs([]);
+        return;
+      }
+      const data = snapshot.val();
+      const list = Object.entries(data)
+        .map(([id, value]) => ({ id, ...value }))
+        .sort((a, b) => b.timestamp - a.timestamp);
+      setLogs(list);
+    } catch (e) {
+      console.error('ログ読み込みエラー:', e);
+      setLogs([]);
+    }
   };
 
   const handleCheckIn = async () => {
