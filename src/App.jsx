@@ -22,7 +22,7 @@ function formatDate(timestamp) {
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 
 const CORRECT_PIN = '5050';
-const ADMIN_PIN = '5050admin';
+const ADMIN_PIN = '505050';
 
 function App() {
   const [name, setName] = useState('');
