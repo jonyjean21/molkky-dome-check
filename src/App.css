@@ -31,6 +31,17 @@
   line-height: 1.6;
 }
 
+.home-tip {
+  font-size: 0.72rem;
+  color: #7a9968;
+  margin-top: 10px;
+  line-height: 1.7;
+  background: #f5f9f0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d5e6c8;
+}
+
 /* Check-in Section */
 .checkin-section {
   margin-bottom: 28px;

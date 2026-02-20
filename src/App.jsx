@@ -179,6 +179,13 @@ function App() {
           <br />
           一度入力すればブラウザを閉じるまで有効です。
         </p>
+        <p className="home-tip">
+          <strong>ホーム画面に追加</strong>するとアプリのように使えます。
+          <br />
+          iPhone：共有ボタン → 「ホーム画面に追加」
+          <br />
+          Android：メニュー（︙）→ 「ホーム画面に追加」
+        </p>
       </header>
 
       <section className="checkin-section">
