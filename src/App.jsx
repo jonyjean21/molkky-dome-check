@@ -22,6 +22,7 @@ function formatDate(timestamp) {
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 
 const CORRECT_PIN = '5050';
+const ADMIN_PIN = '5050admin';
 
 function App() {
   const [name, setName] = useState('');
@@ -31,6 +32,7 @@ function App() {
   const [error, setError] = useState('');
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('pin') === CORRECT_PIN);
   const [pin, setPin] = useState('');
+  const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('admin') === 'true');
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState([]);
 
@@ -125,7 +127,14 @@ function App() {
   };
 
   const handleUnlock = () => {
-    if (pin === CORRECT_PIN) {
+    if (pin === ADMIN_PIN) {
+      sessionStorage.setItem('pin', CORRECT_PIN);
+      sessionStorage.setItem('admin', 'true');
+      setUnlocked(true);
+      setIsAdmin(true);
+      setPin('');
+      setError('');
+    } else if (pin === CORRECT_PIN) {
       sessionStorage.setItem('pin', pin);
       setUnlocked(true);
       setPin('');
@@ -258,7 +267,7 @@ function App() {
         )}
       </section>
 
-      {unlocked && (
+      {isAdmin && (
         <section className="logs-section">
           <button
             className="logs-toggle-btn"
