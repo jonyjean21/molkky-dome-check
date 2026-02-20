@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { db, storage } from './firebase';
+import { useState, useEffect } from 'react';
+import { db } from './firebase';
 import { ref, onValue, push, remove, query, orderByChild } from 'firebase/database';
-import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import './App.css';
 
 function formatTime(timestamp) {
@@ -21,10 +20,6 @@ function App() {
   const [error, setError] = useState('');
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('pin') === CORRECT_PIN);
   const [pin, setPin] = useState('');
-  const [photo, setPhoto] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const membersRef = query(ref(db, 'members'), orderByChild('checkedInAt'));
@@ -44,24 +39,6 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  const handlePhotoSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setError('写真は5MB以下にしてください');
-      return;
-    }
-    setPhoto(file);
-    setPhotoPreview(URL.createObjectURL(file));
-  };
-
-  const clearPhoto = () => {
-    setPhoto(null);
-    if (photoPreview) URL.revokeObjectURL(photoPreview);
-    setPhotoPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
   const handleCheckIn = async () => {
     const trimmed = name.trim();
     if (!trimmed) {
@@ -76,41 +53,20 @@ function App() {
       return;
     }
     setError('');
-    setUploading(true);
-    try {
-      const entry = {
-        name: trimmed,
-        checkedInAt: Date.now(),
-      };
-      const trimmedMemo = memo.trim();
-      if (trimmedMemo) {
-        entry.memo = trimmedMemo;
-      }
-      if (photo) {
-        const photoId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        const photoRef = storageRef(storage, `photos/${photoId}`);
-        await uploadBytes(photoRef, photo);
-        entry.photoURL = await getDownloadURL(photoRef);
-        entry.photoPath = `photos/${photoId}`;
-      }
-      await push(ref(db, 'members'), entry);
-      setName('');
-      setMemo('');
-      clearPhoto();
-    } finally {
-      setUploading(false);
+    const entry = {
+      name: trimmed,
+      checkedInAt: Date.now(),
+    };
+    const trimmedMemo = memo.trim();
+    if (trimmedMemo) {
+      entry.memo = trimmedMemo;
     }
+    await push(ref(db, 'members'), entry);
+    setName('');
+    setMemo('');
   };
 
   const handleCheckOut = async (id) => {
-    const member = members.find((m) => m.id === id);
-    if (member?.photoPath) {
-      try {
-        await deleteObject(storageRef(storage, member.photoPath));
-      } catch {
-        // photo already deleted, ignore
-      }
-    }
     await remove(ref(db, `members/${id}`));
     setSelectedId(null);
   };
@@ -181,42 +137,19 @@ function App() {
                 className="name-input"
                 maxLength={20}
               />
-              <button onClick={handleCheckIn} className="checkin-btn" disabled={uploading}>
-                {uploading ? '送信中...' : 'チェックイン'}
+              <button onClick={handleCheckIn} className="checkin-btn">
+                チェックイン
               </button>
             </div>
-            <div className="photo-memo-row">
-              <input
-                type="text"
-                value={memo}
-                onChange={(e) => setMemo(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="一言メモ（任意）"
-                className="memo-input"
-                maxLength={50}
-              />
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                ref={fileInputRef}
-                onChange={handlePhotoSelect}
-                className="file-input-hidden"
-              />
-              <button
-                className="photo-btn"
-                onClick={() => fileInputRef.current?.click()}
-                type="button"
-              >
-                📷
-              </button>
-            </div>
-            {photoPreview && (
-              <div className="photo-preview">
-                <img src={photoPreview} alt="プレビュー" />
-                <button className="photo-remove-btn" onClick={clearPhoto}>✕</button>
-              </div>
-            )}
+            <input
+              type="text"
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="一言メモ（任意）"
+              className="memo-input"
+              maxLength={50}
+            />
             {error && <p className="error-msg">{error}</p>}
           </>
         )}
@@ -241,9 +174,6 @@ function App() {
                   unlocked && setSelectedId(selectedId === member.id ? null : member.id)
                 }
               >
-                {member.photoURL && (
-                  <img src={member.photoURL} alt="" className="member-photo" />
-                )}
                 <div className="member-info">
                   <span className="member-name">{member.name}</span>
                   {member.memo && (
