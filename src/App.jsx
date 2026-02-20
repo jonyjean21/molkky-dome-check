@@ -12,6 +12,7 @@ function formatTime(timestamp) {
 
 function App() {
   const [name, setName] = useState('');
+  const [memo, setMemo] = useState('');
   const [members, setMembers] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [error, setError] = useState('');
@@ -48,11 +49,17 @@ function App() {
       return;
     }
     setError('');
-    await push(ref(db, 'members'), {
+    const entry = {
       name: trimmed,
       checkedInAt: Date.now(),
-    });
+    };
+    const trimmedMemo = memo.trim();
+    if (trimmedMemo) {
+      entry.memo = trimmedMemo;
+    }
+    await push(ref(db, 'members'), entry);
     setName('');
+    setMemo('');
   };
 
   const handleCheckOut = async (id) => {
@@ -91,6 +98,15 @@ function App() {
             チェックイン
           </button>
         </div>
+        <input
+          type="text"
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="一言メモ（任意）"
+          className="memo-input"
+          maxLength={50}
+        />
         {error && <p className="error-msg">{error}</p>}
       </section>
 
@@ -115,6 +131,9 @@ function App() {
               >
                 <div className="member-info">
                   <span className="member-name">{member.name}</span>
+                  {member.memo && (
+                    <span className="member-memo">「{member.memo}」</span>
+                  )}
                   <span className="member-time">
                     {formatTime(member.checkedInAt)}から滞在中
                   </span>
