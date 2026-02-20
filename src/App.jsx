@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { ref, onValue, push, remove, query, orderByChild, get, orderByValue } from 'firebase/database';
+import { ref, onValue, push, remove, update, query, orderByChild, get } from 'firebase/database';
 import './App.css';
 
 function formatTime(timestamp) {
@@ -8,6 +8,12 @@ function formatTime(timestamp) {
   const h = date.getHours();
   const m = String(date.getMinutes()).padStart(2, '0');
   return `${h}時${m}分`;
+}
+
+function formatTimeValue(timeStr) {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':');
+  return `${Number(h)}時${m}分`;
 }
 
 function formatDate(timestamp) {
@@ -25,8 +31,12 @@ const CORRECT_PIN = '5050';
 const ADMIN_PIN = '505050';
 
 function App() {
+  const [tab, setTab] = useState('here');
   const [name, setName] = useState('');
   const [memo, setMemo] = useState('');
+  const [untilTime, setUntilTime] = useState('');
+  const [fromTime, setFromTime] = useState('');
+  const [toTime, setToTime] = useState('');
   const [members, setMembers] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [error, setError] = useState('');
@@ -36,6 +46,9 @@ function App() {
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState([]);
   const [logError, setLogError] = useState('');
+
+  const hereMembers = members.filter((m) => m.status !== 'coming');
+  const comingMembers = members.filter((m) => m.status === 'coming');
 
   useEffect(() => {
     const membersRef = query(ref(db, 'members'), orderByChild('checkedInAt'));
@@ -104,6 +117,15 @@ function App() {
     }
   };
 
+  const resetForm = () => {
+    setName('');
+    setMemo('');
+    setUntilTime('');
+    setFromTime('');
+    setToTime('');
+    setError('');
+  };
+
   const handleCheckIn = async () => {
     const trimmed = name.trim();
     if (!trimmed) {
@@ -114,22 +136,55 @@ function App() {
       (m) => m.name.toLowerCase() === trimmed.toLowerCase()
     );
     if (duplicate) {
-      setError('同じ名前の人がすでにチェックインしています');
+      setError('同じ名前の人がすでに登録されています');
       return;
     }
     setError('');
-    const entry = {
-      name: trimmed,
+
+    if (tab === 'here') {
+      const entry = {
+        name: trimmed,
+        checkedInAt: Date.now(),
+        status: 'here',
+      };
+      if (untilTime) entry.untilTime = untilTime;
+      const trimmedMemo = memo.trim();
+      if (trimmedMemo) entry.memo = trimmedMemo;
+      await push(ref(db, 'members'), entry);
+      await addLog(trimmed, 'in');
+    } else {
+      const entry = {
+        name: trimmed,
+        checkedInAt: Date.now(),
+        status: 'coming',
+      };
+      if (fromTime) entry.fromTime = fromTime;
+      if (toTime) entry.toTime = toTime;
+      const trimmedMemo = memo.trim();
+      if (trimmedMemo) entry.memo = trimmedMemo;
+      await push(ref(db, 'members'), entry);
+      await addLog(trimmed, 'coming');
+    }
+    resetForm();
+  };
+
+  const handleArrival = async (id) => {
+    const member = members.find((m) => m.id === id);
+    if (!member) return;
+    const updates = {
+      status: 'here',
       checkedInAt: Date.now(),
     };
-    const trimmedMemo = memo.trim();
-    if (trimmedMemo) {
-      entry.memo = trimmedMemo;
+    // fromTime/toTime はもう不要なので削除、untilTime に toTime を引き継ぐ
+    if (member.toTime) {
+      updates.untilTime = member.toTime;
     }
-    await push(ref(db, 'members'), entry);
-    await addLog(trimmed, 'in');
-    setName('');
-    setMemo('');
+    // fromTime, toTime を消す
+    updates.fromTime = null;
+    updates.toTime = null;
+    await update(ref(db, `members/${id}`), updates);
+    await addLog(member.name, 'in');
+    setSelectedId(null);
   };
 
   const handleCheckOut = async (id) => {
@@ -182,9 +237,9 @@ function App() {
         <p className="home-tip">
           <strong>ホーム画面に追加</strong>するとアプリのように使えます。
           <br />
-          iPhone：共有ボタン → 「ホーム画面に追加」
+          iPhone：共有ボタン →「ホーム画面に追加」
           <br />
-          Android：メニュー（︙）→ 「ホーム画面に追加」
+          Android：メニュー（︙）→「ホーム画面に追加」
         </p>
       </header>
 
@@ -213,6 +268,21 @@ function App() {
           </>
         ) : (
           <>
+            <div className="tab-group">
+              <button
+                className={`tab-btn ${tab === 'here' ? 'tab-active' : ''}`}
+                onClick={() => { setTab('here'); setError(''); }}
+              >
+                今いるよ！
+              </button>
+              <button
+                className={`tab-btn ${tab === 'coming' ? 'tab-active' : ''}`}
+                onClick={() => { setTab('coming'); setError(''); }}
+              >
+                あとで行くよ
+              </button>
+            </div>
+
             <div className="input-group">
               <input
                 type="text"
@@ -227,9 +297,42 @@ function App() {
                 maxLength={20}
               />
               <button onClick={handleCheckIn} className="checkin-btn">
-                チェックイン
+                {tab === 'here' ? 'チェックイン' : '登録'}
               </button>
             </div>
+
+            {tab === 'here' ? (
+              <div className="time-row">
+                <label className="time-label">滞在予定</label>
+                <span className="time-sep">〜</span>
+                <input
+                  type="time"
+                  value={untilTime}
+                  onChange={(e) => setUntilTime(e.target.value)}
+                  className="time-input"
+                />
+                <span className="time-hint">まで（任意）</span>
+              </div>
+            ) : (
+              <div className="time-row">
+                <label className="time-label">予定</label>
+                <input
+                  type="time"
+                  value={fromTime}
+                  onChange={(e) => setFromTime(e.target.value)}
+                  className="time-input"
+                />
+                <span className="time-sep">〜</span>
+                <input
+                  type="time"
+                  value={toTime}
+                  onChange={(e) => setToTime(e.target.value)}
+                  className="time-input"
+                />
+                <span className="time-hint">（任意）</span>
+              </div>
+            )}
+
             <input
               type="text"
               value={memo}
@@ -246,16 +349,16 @@ function App() {
 
       <section className="members-section">
         <h2 className="members-title">
-          現在の在室 <span className="count">{members.length}人</span>
+          現在いる人 <span className="count">{hereMembers.length}人</span>
         </h2>
 
-        {members.length === 0 ? (
+        {hereMembers.length === 0 ? (
           <div className="empty-state">
             <p>今は誰もいません</p>
           </div>
         ) : (
           <ul className="members-list">
-            {members.map((member) => (
+            {hereMembers.map((member) => (
               <li
                 key={member.id}
                 className={`member-item ${unlocked && selectedId === member.id ? 'selected' : ''}`}
@@ -270,6 +373,7 @@ function App() {
                   )}
                   <span className="member-time">
                     {formatTime(member.checkedInAt)}から滞在中
+                    {member.untilTime && `（〜${formatTimeValue(member.untilTime)}予定）`}
                   </span>
                 </div>
                 {unlocked && selectedId === member.id && (
@@ -282,6 +386,71 @@ function App() {
                   >
                     帰る
                   </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="members-section coming-section">
+        <h2 className="members-title">
+          あとで来る人 <span className="count count-coming">{comingMembers.length}人</span>
+        </h2>
+
+        {comingMembers.length === 0 ? (
+          <div className="empty-state">
+            <p>予定なし</p>
+          </div>
+        ) : (
+          <ul className="members-list">
+            {comingMembers.map((member) => (
+              <li
+                key={member.id}
+                className={`member-item ${unlocked && selectedId === member.id ? 'selected' : ''}`}
+                onClick={() =>
+                  unlocked && setSelectedId(selectedId === member.id ? null : member.id)
+                }
+              >
+                <div className="member-info">
+                  <span className="member-name">{member.name}</span>
+                  {member.memo && (
+                    <span className="member-memo">「{member.memo}」</span>
+                  )}
+                  <span className="member-time">
+                    {member.fromTime || member.toTime ? (
+                      <>
+                        {member.fromTime ? formatTimeValue(member.fromTime) : ''}
+                        {member.fromTime && member.toTime ? '〜' : ''}
+                        {member.toTime ? formatTimeValue(member.toTime) : ''}
+                        {' 予定'}
+                      </>
+                    ) : (
+                      '来る予定'
+                    )}
+                  </span>
+                </div>
+                {unlocked && selectedId === member.id && (
+                  <div className="action-buttons">
+                    <button
+                      className="arrival-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleArrival(member.id);
+                      }}
+                    >
+                      到着！
+                    </button>
+                    <button
+                      className="checkout-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCheckOut(member.id);
+                      }}
+                    >
+                      取消
+                    </button>
+                  </div>
                 )}
               </li>
             ))}
@@ -310,8 +479,8 @@ function App() {
                 <ul>
                   {logs.map((log) => (
                     <li key={log.id} className="log-item">
-                      <span className={`log-action ${log.action === 'in' ? 'log-in' : 'log-out'}`}>
-                        {log.action === 'in' ? 'IN' : 'OUT'}
+                      <span className={`log-action ${log.action === 'in' ? 'log-in' : log.action === 'coming' ? 'log-coming' : 'log-out'}`}>
+                        {log.action === 'in' ? 'IN' : log.action === 'coming' ? '予定' : 'OUT'}
                       </span>
                       <span className="log-name">{log.name}</span>
                       <span className="log-time">{formatDate(log.timestamp)}</span>

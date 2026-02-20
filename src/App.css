@@ -42,6 +42,37 @@
   border: 1px solid #d5e6c8;
 }
 
+/* Tab Group */
+.tab-group {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #5a8f3c;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  background: #fff;
+  color: #5a8f3c;
+}
+
+.tab-btn.tab-active {
+  background: #5a8f3c;
+  color: #fff;
+}
+
+.tab-btn:active {
+  opacity: 0.8;
+}
+
 /* Check-in Section */
 .checkin-section {
   margin-bottom: 28px;
@@ -89,6 +120,50 @@
   background: #4a7a30;
 }
 
+/* Time Row */
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.time-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #5a5a5a;
+  flex-shrink: 0;
+}
+
+.time-input {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  border: 2px solid #c4b89e;
+  border-radius: 8px;
+  background: #fff;
+  color: #3a3a3a;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 110px;
+}
+
+.time-input:focus {
+  border-color: #5a8f3c;
+}
+
+.time-sep {
+  font-size: 0.9rem;
+  color: #8a8a7a;
+  flex-shrink: 0;
+}
+
+.time-hint {
+  font-size: 0.78rem;
+  color: #aaa;
+  flex-shrink: 0;
+}
+
 .memo-input {
   width: 100%;
   padding: 10px 14px;
@@ -127,6 +202,10 @@
   border: 1px solid #e0d8cc;
 }
 
+.coming-section {
+  margin-top: 16px;
+}
+
 .members-title {
   font-size: 1rem;
   color: #5a5a5a;
@@ -142,6 +221,10 @@
   color: #fff;
   padding: 2px 10px;
   border-radius: 12px;
+}
+
+.count-coming {
+  background: #e67e22;
 }
 
 /* Empty State */
@@ -201,6 +284,29 @@
 .member-time {
   font-size: 0.8rem;
   color: #8a8a7a;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.arrival-btn {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: #e67e22;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.arrival-btn:active {
+  background: #cf6d17;
 }
 
 .checkout-btn {
@@ -292,6 +398,11 @@
 .log-out {
   background: #fce4ec;
   color: #c62828;
+}
+
+.log-coming {
+  background: #fff3e0;
+  color: #e65100;
 }
 
 .log-name {
