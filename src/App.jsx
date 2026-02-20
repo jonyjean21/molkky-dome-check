@@ -35,6 +35,7 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('admin') === 'true');
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [logError, setLogError] = useState('');
 
   useEffect(() => {
     const membersRef = query(ref(db, 'members'), orderByChild('checkedInAt'));
@@ -67,22 +68,26 @@ function App() {
   };
 
   const addLog = async (name, action) => {
-    await push(ref(db, 'logs'), {
-      name,
-      action,
-      timestamp: Date.now(),
-    });
+    try {
+      await push(ref(db, 'logs'), {
+        name,
+        action,
+        timestamp: Date.now(),
+      });
+    } catch (e) {
+      console.error('ログ書き込みエラー:', e);
+    }
   };
 
   const loadLogs = async () => {
+    setLogError('');
     try {
       await cleanOldLogs();
     } catch (e) {
       // ignore cleanup errors
     }
     try {
-      const logsRef = query(ref(db, 'logs'), orderByChild('timestamp'));
-      const snapshot = await get(logsRef);
+      const snapshot = await get(ref(db, 'logs'));
       if (!snapshot.exists()) {
         setLogs([]);
         return;
@@ -94,6 +99,7 @@ function App() {
       setLogs(list);
     } catch (e) {
       console.error('ログ読み込みエラー:', e);
+      setLogError(e.message || 'ログの読み込みに失敗しました');
       setLogs([]);
     }
   };
@@ -289,7 +295,9 @@ function App() {
           </button>
           {showLogs && (
             <div className="logs-list">
-              {logs.length === 0 ? (
+              {logError ? (
+                <p className="error-msg">{logError}</p>
+              ) : logs.length === 0 ? (
                 <p className="logs-empty">履歴はありません</p>
               ) : (
                 <ul>
