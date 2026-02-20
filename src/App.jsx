@@ -328,7 +328,7 @@ function App() {
         <p className="footer-url">
           このページのURL
           <br />
-          <a href="https://jonyjean21.github.io/molkky-dome-check">jonyjean21.github.io/molkky-dome-check</a>
+          <a href="https://molkky-dome-check.vercel.app">molkky-dome-check.vercel.app</a>
         </p>
       </footer>
     </div>
