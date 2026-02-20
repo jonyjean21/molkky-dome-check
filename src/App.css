@@ -320,9 +320,10 @@
   line-height: 1.8;
 }
 
-.footer-url span {
+.footer-url a {
   font-size: 0.8rem;
   color: #5a8f3c;
   font-weight: 600;
   letter-spacing: 0.02em;
+  text-decoration: none;
 }

@@ -328,7 +328,7 @@ function App() {
         <p className="footer-url">
           このページのURL
           <br />
-          <span>jonyjean21.github.io/molkky-dome-check</span>
+          <a href="https://jonyjean21.github.io/molkky-dome-check">jonyjean21.github.io/molkky-dome-check</a>
         </p>
       </footer>
     </div>
