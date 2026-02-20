@@ -323,6 +323,14 @@ function App() {
           )}
         </section>
       )}
+
+      <footer className="footer">
+        <p className="footer-url">
+          このページのURL
+          <br />
+          <span>jonyjean21.github.io/molkky-dome-check</span>
+        </p>
+      </footer>
     </div>
   );
 }
