@@ -10,12 +10,16 @@ function formatTime(timestamp) {
   return `${h}時${m}分`;
 }
 
+const CORRECT_PIN = '5050';
+
 function App() {
   const [name, setName] = useState('');
   const [memo, setMemo] = useState('');
   const [members, setMembers] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [error, setError] = useState('');
+  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('pin') === CORRECT_PIN);
+  const [pin, setPin] = useState('');
 
   useEffect(() => {
     const membersRef = query(ref(db, 'members'), orderByChild('checkedInAt'));
@@ -67,9 +71,24 @@ function App() {
     setSelectedId(null);
   };
 
+  const handleUnlock = () => {
+    if (pin === CORRECT_PIN) {
+      sessionStorage.setItem('pin', pin);
+      setUnlocked(true);
+      setPin('');
+      setError('');
+    } else {
+      setError('PINが違います');
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      handleCheckIn();
+      if (!unlocked) {
+        handleUnlock();
+      } else {
+        handleCheckIn();
+      }
     }
   };
 
@@ -81,33 +100,59 @@ function App() {
       </header>
 
       <section className="checkin-section">
-        <div className="input-group">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setError('');
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="名前を入力"
-            className="name-input"
-            maxLength={20}
-          />
-          <button onClick={handleCheckIn} className="checkin-btn">
-            チェックイン
-          </button>
-        </div>
-        <input
-          type="text"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="一言メモ（任意）"
-          className="memo-input"
-          maxLength={50}
-        />
-        {error && <p className="error-msg">{error}</p>}
+        {!unlocked ? (
+          <>
+            <div className="input-group">
+              <input
+                type="password"
+                value={pin}
+                onChange={(e) => {
+                  setPin(e.target.value);
+                  setError('');
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="PINを入力"
+                className="name-input"
+                maxLength={10}
+                inputMode="numeric"
+              />
+              <button onClick={handleUnlock} className="checkin-btn">
+                解除
+              </button>
+            </div>
+            {error && <p className="error-msg">{error}</p>}
+          </>
+        ) : (
+          <>
+            <div className="input-group">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setError('');
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="名前を入力"
+                className="name-input"
+                maxLength={20}
+              />
+              <button onClick={handleCheckIn} className="checkin-btn">
+                チェックイン
+              </button>
+            </div>
+            <input
+              type="text"
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="一言メモ（任意）"
+              className="memo-input"
+              maxLength={50}
+            />
+            {error && <p className="error-msg">{error}</p>}
+          </>
+        )}
       </section>
 
       <section className="members-section">
@@ -124,9 +169,9 @@ function App() {
             {members.map((member) => (
               <li
                 key={member.id}
-                className={`member-item ${selectedId === member.id ? 'selected' : ''}`}
+                className={`member-item ${unlocked && selectedId === member.id ? 'selected' : ''}`}
                 onClick={() =>
-                  setSelectedId(selectedId === member.id ? null : member.id)
+                  unlocked && setSelectedId(selectedId === member.id ? null : member.id)
                 }
               >
                 <div className="member-info">
@@ -138,7 +183,7 @@ function App() {
                     {formatTime(member.checkedInAt)}から滞在中
                   </span>
                 </div>
-                {selectedId === member.id && (
+                {unlocked && selectedId === member.id && (
                   <button
                     className="checkout-btn"
                     onClick={(e) => {
