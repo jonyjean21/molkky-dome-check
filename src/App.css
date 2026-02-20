@@ -24,6 +24,13 @@
   margin-top: 4px;
 }
 
+.description {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
 /* Check-in Section */
 .checkin-section {
   margin-bottom: 28px;
@@ -199,4 +206,91 @@
 
 .checkout-btn:active {
   background: #a93226;
+}
+
+/* Logs Section */
+.logs-section {
+  margin-top: 20px;
+}
+
+.logs-toggle-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5a8f3c;
+  background: #fff;
+  border: 2px solid #5a8f3c;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logs-toggle-btn:active {
+  background: #f0f8e8;
+}
+
+.logs-list {
+  margin-top: 12px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e0d8cc;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.logs-list ul {
+  list-style: none;
+}
+
+.logs-empty {
+  text-align: center;
+  color: #a0a0a0;
+  font-size: 0.9rem;
+  padding: 16px 0;
+}
+
+.log-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0ebe3;
+  font-size: 0.85rem;
+}
+
+.log-item:last-child {
+  border-bottom: none;
+}
+
+.log-action {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.log-in {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.log-out {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.log-name {
+  font-weight: 600;
+  color: #3a3a3a;
+  flex: 1;
+}
+
+.log-time {
+  color: #8a8a7a;
+  font-size: 0.8rem;
+  flex-shrink: 0;
 }

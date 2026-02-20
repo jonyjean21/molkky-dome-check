@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { ref, onValue, push, remove, query, orderByChild } from 'firebase/database';
+import { ref, onValue, push, remove, query, orderByChild, get, orderByValue } from 'firebase/database';
 import './App.css';
 
 function formatTime(timestamp) {
@@ -9,6 +9,17 @@ function formatTime(timestamp) {
   const m = String(date.getMinutes()).padStart(2, '0');
   return `${h}時${m}分`;
 }
+
+function formatDate(timestamp) {
+  const date = new Date(timestamp);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const h = date.getHours();
+  const m = String(date.getMinutes()).padStart(2, '0');
+  return `${month}/${day} ${h}:${m}`;
+}
+
+const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 
 const CORRECT_PIN = '5050';
 
@@ -20,6 +31,8 @@ function App() {
   const [error, setError] = useState('');
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('pin') === CORRECT_PIN);
   const [pin, setPin] = useState('');
+  const [showLogs, setShowLogs] = useState(false);
+  const [logs, setLogs] = useState([]);
 
   useEffect(() => {
     const membersRef = query(ref(db, 'members'), orderByChild('checkedInAt'));
@@ -38,6 +51,41 @@ function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  const cleanOldLogs = async () => {
+    const cutoff = Date.now() - THIRTY_DAYS;
+    const logsRef = ref(db, 'logs');
+    const snapshot = await get(logsRef);
+    if (!snapshot.exists()) return;
+    const data = snapshot.val();
+    const deletePromises = Object.entries(data)
+      .filter(([, v]) => v.timestamp < cutoff)
+      .map(([id]) => remove(ref(db, `logs/${id}`)));
+    await Promise.all(deletePromises);
+  };
+
+  const addLog = async (name, action) => {
+    await push(ref(db, 'logs'), {
+      name,
+      action,
+      timestamp: Date.now(),
+    });
+  };
+
+  const loadLogs = async () => {
+    await cleanOldLogs();
+    const logsRef = query(ref(db, 'logs'), orderByChild('timestamp'));
+    const snapshot = await get(logsRef);
+    if (!snapshot.exists()) {
+      setLogs([]);
+      return;
+    }
+    const data = snapshot.val();
+    const list = Object.entries(data)
+      .map(([id, value]) => ({ id, ...value }))
+      .sort((a, b) => b.timestamp - a.timestamp);
+    setLogs(list);
+  };
 
   const handleCheckIn = async () => {
     const trimmed = name.trim();
@@ -62,12 +110,17 @@ function App() {
       entry.memo = trimmedMemo;
     }
     await push(ref(db, 'members'), entry);
+    await addLog(trimmed, 'in');
     setName('');
     setMemo('');
   };
 
   const handleCheckOut = async (id) => {
+    const member = members.find((m) => m.id === id);
     await remove(ref(db, `members/${id}`));
+    if (member) {
+      await addLog(member.name, 'out');
+    }
     setSelectedId(null);
   };
 
@@ -97,6 +150,11 @@ function App() {
       <header className="header">
         <h1>モルックドーム</h1>
         <p className="subtitle">在室確認</p>
+        <p className="description">
+          PINを入力するとチェックイン・チェックアウトができます。
+          <br />
+          一度入力すればブラウザを閉じるまで有効です。
+        </p>
       </header>
 
       <section className="checkin-section">
@@ -199,6 +257,39 @@ function App() {
           </ul>
         )}
       </section>
+
+      {unlocked && (
+        <section className="logs-section">
+          <button
+            className="logs-toggle-btn"
+            onClick={() => {
+              if (!showLogs) loadLogs();
+              setShowLogs(!showLogs);
+            }}
+          >
+            {showLogs ? '履歴を閉じる' : '利用履歴'}
+          </button>
+          {showLogs && (
+            <div className="logs-list">
+              {logs.length === 0 ? (
+                <p className="logs-empty">履歴はありません</p>
+              ) : (
+                <ul>
+                  {logs.map((log) => (
+                    <li key={log.id} className="log-item">
+                      <span className={`log-action ${log.action === 'in' ? 'log-in' : 'log-out'}`}>
+                        {log.action === 'in' ? 'IN' : 'OUT'}
+                      </span>
+                      <span className="log-name">{log.name}</span>
+                      <span className="log-time">{formatDate(log.timestamp)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
