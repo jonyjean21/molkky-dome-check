@@ -1,0 +1,174 @@
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 24px 0 16px;
+  border-bottom: 3px solid #5a8f3c;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  font-size: 1.6rem;
+  color: #3d6b2e;
+  letter-spacing: 0.05em;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #7a9968;
+  margin-top: 4px;
+}
+
+/* Check-in Section */
+.checkin-section {
+  margin-bottom: 28px;
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.name-input {
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 1rem;
+  border: 2px solid #c4b89e;
+  border-radius: 10px;
+  background: #fff;
+  color: #3a3a3a;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.name-input:focus {
+  border-color: #5a8f3c;
+}
+
+.name-input::placeholder {
+  color: #b0a898;
+}
+
+.checkin-btn {
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #5a8f3c;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.checkin-btn:active {
+  background: #4a7a30;
+}
+
+.error-msg {
+  color: #c0392b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  padding-left: 4px;
+}
+
+/* Members Section */
+.members-section {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e0d8cc;
+}
+
+.members-title {
+  font-size: 1rem;
+  color: #5a5a5a;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.count {
+  font-size: 0.85rem;
+  background: #5a8f3c;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 32px 0;
+  color: #a0a0a0;
+  font-size: 0.95rem;
+}
+
+/* Members List */
+.members-list {
+  list-style: none;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f0ebe3;
+}
+
+.member-item:last-child {
+  border-bottom: none;
+}
+
+.member-item:active {
+  background: #f5f0e8;
+}
+
+.member-item.selected {
+  background: #f5f0e8;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.member-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #3a3a3a;
+}
+
+.member-time {
+  font-size: 0.8rem;
+  color: #8a8a7a;
+}
+
+.checkout-btn {
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: #c0392b;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.checkout-btn:active {
+  background: #a93226;
+}
